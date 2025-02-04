@@ -1,8 +1,8 @@
-[package]
-name = "cluttercontrol"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+members = [
+    "base",
+    "api",
+]
 
-[dependencies]
-serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.138"
+[workspace.dependencies]
+anyhow = "1.0.95"

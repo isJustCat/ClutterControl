@@ -17,6 +17,7 @@ pub struct Creature {
 }
  
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub enum Condition {
     New,
     Excellent,
@@ -38,6 +39,7 @@ impl Condition {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub enum Action {
     Increment,
     Decrement,
