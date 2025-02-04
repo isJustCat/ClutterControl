@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Creature {
-    pub id: u32,
+    pub id: usize,
     pub name: String,
     pub can_login: String,
     pub password_hash: Option<String>,
@@ -57,7 +57,7 @@ impl Action {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Change {
-    pub id: u32,
+    pub id: usize,
     pub action: Action,
     pub date: String,
 
@@ -67,7 +67,7 @@ pub struct Change {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Location {
-    pub id: u32,
+    pub id: usize,
     pub name: String,
     pub description: Option<String>,
     pub items: Option<Vec<Item>>,
@@ -77,17 +77,17 @@ pub struct Location {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Item {
-    pub id: u32,
+    pub id: usize,
     pub name: String,
     pub description: Option<String>,
-    pub history: Vec<u32>,
-    pub properties: Option<Vec<u32>>
+    pub history: Vec<usize>,
+    pub properties: Option<Vec<usize>>
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Property {
-    pub id: u32,
-    pub item_ids: Option<Vec<u32>>,
+    pub id: usize,
+    pub item_ids: Option<Vec<usize>>,
     pub name: Option<String>,
     pub description: Option<String>,
     pub history: Vec<Change>,

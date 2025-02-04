@@ -5,7 +5,7 @@ use std::default;
 
 use anyhow::Result;
 use cluttercontrol_base::{App, Config};
-use endpoints::{r_create_object, r_get_everything, r_query_storage};
+use endpoints::{r_create_object, r_delete_object, r_get_everything, r_query_storage};
 mod endpoints;
 
 #[rocket::main]
@@ -21,7 +21,7 @@ async fn main() -> Result<(), rocket::Error> {
             ..Default::default()
         })
         .manage(App::launch())
-        .mount("/", routes![r_create_object, r_query_storage, r_get_everything])
+        .mount("/", routes![r_create_object, r_query_storage, r_get_everything, r_delete_object])
         .launch()
         .await?;
     Ok(())

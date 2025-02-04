@@ -1,6 +1,7 @@
 #![allow(unused)]
 
-use std::{env, fs::{File, OpenOptions}, io::Read, path::Path, sync::RwLock};
+use std::{env, fs::{File, OpenOptions}, io::Read, path::Path};
+use tokio::sync::RwLock;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use storage::Storage;
@@ -39,10 +40,10 @@ impl Config {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 pub struct App {
     pub storage: RwLock<Storage>,
-    pub config: Config
+    pub config: RwLock<Config>
 }
 
 impl App {
@@ -52,7 +53,11 @@ impl App {
 
         App {
             storage: storage.into(),
-            config
+            config: config.into()
         }
+    }
+
+    pub fn log_change() {
+        
     }
 }

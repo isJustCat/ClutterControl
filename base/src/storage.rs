@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
+use serde_json::{value::Index, Value};
 use std::{
-    fmt::Debug, fs::{File, OpenOptions}, io::Read, path::Path
+    collections::HashMap, fmt::Debug, fs::{File, OpenOptions}, io::Read, path::Path
 };
 use anyhow::{Error, Result};
 use crate::models::*;
@@ -55,13 +56,13 @@ impl Storage {
     /// ``` rust
     /// storage::query("locations", "name", "kitchen shelf");
     /// ```
-    pub fn query(&self, identifier: &str, field: &str, value: &str) -> Vec<String> {
-        let mut results = Vec::new();
+    pub fn query(&self, identifier: &str, field: &str, value: &str) -> HashMap<usize, String> {
+        let mut results = HashMap::new();
 
-        fn search_in_vec<T: Serialize + Debug>(vec: &Vec<T>, node: Option<&str>, field: &str, value: &str) -> Vec<String> {
-            let mut found_items = Vec::new();
+        fn search_in_vec<T: Serialize + for<'a> Deserialize<'a> + Debug>(vec: &Vec<T>, node: Option<&str>, field: &str, value: &str) -> HashMap<usize, String> {
+            let mut found_items = HashMap::new();
 
-            for item in vec {
+            for (index, item) in vec.iter().enumerate() {
                 // serialize object to json
                 let json_value = match serde_json::to_value(item) {
                     Ok(value) => value,
@@ -72,7 +73,7 @@ impl Storage {
                 if let Some(field_value) = json_value.get(field) {
                     if field_value == value {
                         // if it's a match, add it to the Vec of results
-                        found_items.push(format!("{:?}", item))
+                        found_items.insert(index, String::from(value));
                     }
                 }
             }
@@ -85,7 +86,7 @@ impl Storage {
             "creatures" => results.extend(search_in_vec(&self.creatures, None, field, value)),
             "items" => results.extend(search_in_vec(&self.items, None,  field,  value)),
             _ => results.extend(search_in_vec(&self.properties, Some(identifier), field, value))
-        }
+        };
 
         results
     }
