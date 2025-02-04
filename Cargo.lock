@@ -151,13 +151,17 @@ name = "cluttercontrol-api"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "cluttercontrol-base",
  "rocket",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
 name = "cluttercontrol-base"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "serde",
  "serde_json",
 ]
@@ -920,6 +924,7 @@ dependencies = [
  "rocket_codegen",
  "rocket_http",
  "serde",
+ "serde_json",
  "state",
  "tempfile",
  "time",

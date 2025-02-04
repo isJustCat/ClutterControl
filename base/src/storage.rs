@@ -1,18 +1,11 @@
-
-
-#![allow(unused)]
-
 use serde::{Serialize, Deserialize};
 use std::{
-    fmt::Debug, fs::File, io::Read
+    fmt::Debug, fs::{File, OpenOptions}, io::Read, path::Path
 };
+use anyhow::{Error, Result};
 use crate::models::*;
 
-
-
-
-// I'm not sure if I am happy with this...
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Storage {
     pub locations: Vec<Location>,
     pub creatures: Vec<Creature>,
@@ -20,7 +13,6 @@ pub struct Storage {
     pub properties: Vec<Property>,
     pub changes: Vec<Change>,
     pub actions: Vec<Action>,
-
 }
 
 impl Storage {
@@ -36,14 +28,14 @@ impl Storage {
     }
 
 
-    pub fn save(&self, path: &str) -> std::io::Result<()> {
-        let file = File::create(path)?;
+    pub fn save(&self) -> Result<()> {
+        let file = OpenOptions::new().read(true).write(true).create(true).open("storage.json")?;
         serde_json::to_writer(file, &self)?;
         Ok(())
     }
 
-    pub fn load(path: &str) -> std::io::Result<Storage> {
-        let mut file = File::open(path)?;
+    pub fn load() -> Result<Self> {
+        let mut file = File::open(Path::new("storage.json"))?;
         let mut data = String::new();
         file.read_to_string(&mut data)?;
         let storage: Storage = serde_json::from_str(&data).map_err(|e| {

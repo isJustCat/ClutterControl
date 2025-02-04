@@ -1,12 +1,9 @@
 
-
-#![allow(unused)]
-
 use std::collections::HashMap;
 
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Creature {
     pub id: u32,
     pub name: String,
@@ -16,7 +13,7 @@ pub struct Creature {
     pub history: Vec<Change>,
 }
  
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum Condition {
     New,
@@ -38,7 +35,7 @@ impl Condition {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum Action {
     Increment,
@@ -58,7 +55,7 @@ impl Action {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Change {
     pub id: u32,
     pub action: Action,
@@ -68,7 +65,7 @@ pub struct Change {
 
 /// A physical location possibly containing items
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Location {
     pub id: u32,
     pub name: String,
@@ -78,7 +75,7 @@ pub struct Location {
     pub history: Vec<Change>
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Item {
     pub id: u32,
     pub name: String,
@@ -87,7 +84,7 @@ pub struct Item {
     pub properties: Option<Vec<u32>>
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Property {
     pub id: u32,
     pub item_ids: Option<Vec<u32>>,
