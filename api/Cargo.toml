@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true, optional = true }
+rocket = "0.5.1"
