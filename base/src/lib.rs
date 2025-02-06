@@ -24,7 +24,7 @@ pub trait FsExt {
 
 impl FsExt for Storage {
     fn load() -> Result<Storage> {
-        let mut file = File::open(Path::new("storage.json"))?;
+        let mut file = File::create(Path::new("storage.json"))?;
         let mut data = String::new();
         file.read_to_string(&mut data)?;
         let storage = serde_json::from_str(&data)?;
@@ -32,9 +32,15 @@ impl FsExt for Storage {
     }
 
     fn save(&self) -> Result<()> {
-        let file = OpenOptions::new().write(true).create(true).open("storage.json")?;
-        serde_json::to_writer(file, self)?;
+        let file = File::create("storage.json")?;
+        serde_json::to_writer_pretty(file, self)?;
         Ok(())
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -47,7 +53,7 @@ impl Config {
     }
 
     pub fn load() -> Result<Self> {
-        let mut file = File::open(Path::new("config.json"))?;
+        let mut file = File::create(Path::new("config.json"))?;
         let mut data = String::new();
         file.read_to_string(&mut data)?;
         let config = serde_json::from_str(&data)?;
@@ -55,8 +61,8 @@ impl Config {
     }
 
     pub fn save(&self) -> Result<()> {
-        let file = OpenOptions::new().write(true).create(true).open("config.json")?;
-        serde_json::to_writer(file, &self)?;
+        let file = File::create("config.json")?;
+        serde_json::to_writer_pretty(file, self)?;
         Ok(())
     }
 }

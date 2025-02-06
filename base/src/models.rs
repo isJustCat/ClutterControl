@@ -1,23 +1,30 @@
 
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display, str::FromStr};
 
 use serde::{Serialize, Deserialize};
 
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
+#[serde(tag = "type")]  /*
+                            Internal tagging :3
+                            The enum variant is inferred from a 'type' field.
+                            Some funny serde "magic"..
+                            https://serde.rs/enum-representations.html
+                        */
 pub enum Entity {
-    Creature,
-    Item,
-    Location,
-    Change,
-    Condition,
-    Tag
+    Creature(Creature),
+    Item(Item),
+    Location(Location),
+    Change(Change),
+    Condition(Condition),
+    Tag(Tag),
 }
 impl Entity {
+    /*
     pub fn from_str(str: &str) -> Option<Self> {
         match str.to_lowercase().as_str() {
-            "creature" => Some(Self::Creature),
+            "creature" => Some(Self::Creature(_)),
             "item" => Some(Self::Item),
             "location" => Some(Self::Location),
             "change" => Some(Self::Change),
@@ -25,15 +32,15 @@ impl Entity {
             "tag" => Some(Self::Tag),
             _ => None
         }
-    }
+    } */ 
     pub fn as_str(&self) -> &str {
         match self {
-            Entity::Creature => "creture",
-            Entity::Item => "item",
-            Entity::Location => "location",
-            Entity::Change => "change",
-            Entity::Condition => "condition",
-            Entity::Tag => "tag"
+            Entity::Creature(_) => "creture",
+            Entity::Item(_) => "item",
+            Entity::Location(_) => "location",
+            Entity::Change(_) => "change",
+            Entity::Condition(_) => "condition",
+            Entity::Tag(_) => "tag"
         }
     }
 }
@@ -77,28 +84,33 @@ pub enum Condition {
     Fair,
     Poor,
 }
-impl Condition {
-    pub fn as_str(&self) -> &str {
-        match self {
+
+impl FromStr for Condition {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "new" => Ok(Condition::New),
+            "excellent" => Ok(Condition::Excellent),
+            "good" => Ok(Condition::Good),
+            "fair" => Ok(Condition::Fair),
+            "poor" => Ok(Condition::Poor),
+            _ => Err(())
+            
+        }
+    }
+}
+
+impl Display for Condition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
             Condition::New => "New",
             Condition::Excellent => "Excellent",
             Condition::Good => "Good",
             Condition::Fair => "Fair",
             Condition::Poor => "Poor",
-        }
+        })
     }
-
-    pub fn from_str(str: &str) -> Option<Self> {
-        match str.to_lowercase().as_str() {
-            "new" => Some(Condition::New),
-            "excellent" => Some(Condition::Excellent),
-            "good" => Some(Condition::Good),
-            "fair" => Some(Condition::Fair),
-            "poor" => Some(Condition::Poor),
-            _ => None
-            
-        }
-    } 
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -117,29 +129,35 @@ pub enum Action {
     Update,
     Delete,
 }
-impl Action {
-    pub fn as_str(&self) -> &str {
-        match self {
+
+impl FromStr for Action {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "increment" => Ok(Action::Increment),
+            "decrement" => Ok(Action::Decrement),
+            "update" => Ok(Action::Update),
+            "create" => Ok(Action::Create),
+            "delete" => Ok(Action::Delete),
+            _ => Err(())
+
+        }
+    }
+}
+
+impl Display for Action {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
             Action::Increment => "Increment",
             Action::Decrement => "Decrement",
             Action::Update => "Update",
             Action::Delete => "Delete",
             Action::Create => "Create"
-        }
-    }
-
-    pub fn from_str(str: &str) -> Option<Self> {
-        match str.to_lowercase().as_str() {
-            "increment" => Some(Action::Increment),
-            "decrement" => Some(Action::Decrement),
-            "update" => Some(Action::Update),
-            "create" => Some(Action::Create),
-            "delete" => Some(Action::Delete),
-            _ => None
-
-        }
+        })
     }
 }
+
 
 /// A Change that has occurred at some point in time
 #[derive(Serialize, Deserialize, Debug, Clone)]
