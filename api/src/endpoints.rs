@@ -1,45 +1,58 @@
-use cluttercontrol_base::{models::*, storage::*, App};
+use std::str::FromStr;
+
+use cluttercontrol_base::{models::*, Storage, App, FsExt};
 use rocket::{
     get,
-    serde::json::Json,
+    serde::json::{from_str, Json},
     Request, State,
 };
 use serde_json::{json, Value};
+use uuid::Uuid;
 
 #[get("/everything")]
 pub async fn r_get_everything(app: &State<App>) -> Json<Storage> {
     Json((*app.storage.read().await).clone())
 }
 
-#[get("/<identifier>/<field>/<value>")]
-pub async fn r_query_storage(app: &State<App>, identifier: &str, field: &str, value: &str) -> Json<Value> {
-    Json(json!(app.storage.write().await.query(identifier, field, value)))
-}
-
-#[put("/<identifier>", data="<object>")]
-pub async fn r_create_object(app: &State<App>, identifier: &str, object: Json<Value>) {
+#[put("/<entity_type>", data="<object>")]
+pub async fn r_create_object(app: &State<App>, entity_type: &str, mut object: Json<Value>) {
     let mut storage = app.storage.write().await;
-    match identifier {
-        "locations" => storage.locations.push(serde_json::from_value((*object).clone()).expect("Oopsie woopsie! Seems like you fed me invalid data ><")),
-        "creatures" => storage.creatures.push(serde_json::from_value((*object).clone()).expect("Oopsie woopsie! Seems like you fed me invalid data ><")),
-        "items" => storage.items.push(serde_json::from_value((*object).clone()).expect("Oopsie woopsie! Seems like you fed me invalid data ><")),
-        _ => storage.properties.push(serde_json::from_value((*object).clone()).expect("Oopsie woopsie! Seems like you fed me invalid data ><"))
-    }
-    storage.save();
-}
-
-#[delete("/<identifier>/<field>/<value>")]
-pub async fn r_delete_object(app: &State<App>, identifier: &str, field: &str, value: &str) {
-    let mut storage = app.storage.write().await;
-    let objects  = storage.query(identifier, field, value);
-    for k in objects.keys() {
-        match identifier {
-            "locations" => drop(storage.locations.remove(*k)),
-            "creatures" => drop(storage.creatures.remove(*k)),
-            "items" => drop(storage.items.remove(*k)),
-            _ => drop(storage.properties.remove(*k))
+    let mut entity: Entity;
+    match entity_type {
+        "creature" => {
+            let entity: Creature = serde_json::from_str(&object.to_string()).unwrap();
+        },
+        "item" => {
+            let entity: Item = serde_json::from_str(&object.to_string()).unwrap();
+        },
+        "location" => {
+            let entity: Location = serde_json::from_str(&object.to_string()).unwrap();
+        },
+        "change" => {
+            let entity: Change = serde_json::from_str(&object.to_string()).unwrap();
+        },
+        "condition" => {
+            let entity: Condition = serde_json::from_str(&object.to_string()).unwrap();
+        },
+        "tag" => {
+            let entity: Tag = serde_json::from_str(&object.to_string()).unwrap();
         }
+        _ => {}
     }
+    
+}
+
+
+/// Delete an Entity from the Storage
+/// 
+/// Arguments
+/// `identifier` - UUID of the Entity to be deleted
+#[delete("/<identifier>")]
+pub async fn r_delete_object(app: &State<App>, identifier: String) {
+    let mut storage = app.storage.write().await;
+    let uuid = Uuid::from_str(&identifier).expect("Failed to parse UUID");
+    storage.remove(&uuid); // remove Entity with the specified uuid 
+    storage.save(); // write storage to disk
     
 }
 

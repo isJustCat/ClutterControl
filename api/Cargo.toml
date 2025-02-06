@@ -9,3 +9,4 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 rocket = { workspace = true }
 cluttercontrol-base = { path = "../base" }
+uuid = {workspace = true}

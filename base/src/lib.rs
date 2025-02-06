@@ -1,12 +1,12 @@
 #![allow(unused)]
 
-use std::{env, fs::{File, OpenOptions}, io::Read, path::Path};
+use std::{collections::HashMap, env, fs::{File, OpenOptions}, io::Read, path::Path};
+use models::{Action, Change, Entity};
 use tokio::sync::RwLock;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use storage::Storage;
+use uuid::Uuid;
 
-pub mod storage;
 pub mod models;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -15,11 +15,34 @@ pub struct Config {
     pub app_name: String,
 }
 
+pub type Storage = HashMap<Uuid, Entity>;
+
+pub trait FsExt {
+    fn save(&self) -> Result<()>;
+    fn load() -> Result<Storage>;
+}
+
+impl FsExt for Storage {
+    fn load() -> Result<Storage> {
+        let mut file = File::open(Path::new("storage.json"))?;
+        let mut data = String::new();
+        file.read_to_string(&mut data)?;
+        let storage = serde_json::from_str(&data)?;
+        Ok(storage)
+    }
+
+    fn save(&self) -> Result<()> {
+        let file = OpenOptions::new().write(true).create(true).open("storage.json")?;
+        serde_json::to_writer(file, self)?;
+        Ok(())
+    }
+}
+
 impl Config {
     pub fn new() -> Self {
         Config {
-            environment: env::var("CC_ENV").as_deref().unwrap_or("prod").to_owned(),
-            app_name: env::var("CC_APPNAME").as_deref().unwrap_or("ClutterControl").to_owned(),
+            environment: env::var("CC_ENV").unwrap_or_else(|_| "prod".to_owned()),
+            app_name: env::var("CC_APPNAME").unwrap_or_else(|_| "ClutterControl".to_owned()),
         }
     }
 
@@ -27,14 +50,12 @@ impl Config {
         let mut file = File::open(Path::new("config.json"))?;
         let mut data = String::new();
         file.read_to_string(&mut data)?;
-        let config = serde_json::from_str(&data).map_err(|e| {
-            std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string())
-        })?;
+        let config = serde_json::from_str(&data)?;
         Ok(config)
     }
 
     pub fn save(&self) -> Result<()> {
-        let file = OpenOptions::new().read(true).write(true).create(true).open("config.json")?;
+        let file = OpenOptions::new().write(true).create(true).open("config.json")?;
         serde_json::to_writer(file, &self)?;
         Ok(())
     }
@@ -43,21 +64,19 @@ impl Config {
 #[derive(Debug)]
 pub struct App {
     pub storage: RwLock<Storage>,
-    pub config: RwLock<Config>
+    pub config: RwLock<Config>,
 }
 
 impl App {
-    pub fn launch() -> Self {
-        let storage = Storage::load().unwrap_or(Storage::new());
-        let config = Config::load().unwrap_or(Config::new());
+    pub async fn launch() -> Self {
+        let storage = Storage::load().unwrap_or_else(|_| Storage::new());
+        let config = Config::load().unwrap_or_else(|_| Config::new());
 
         App {
-            storage: storage.into(),
-            config: config.into()
+            storage: RwLock::new(storage),
+            config: RwLock::new(config),
         }
     }
 
-    pub fn log_change() {
-        
-    }
+   
 }
