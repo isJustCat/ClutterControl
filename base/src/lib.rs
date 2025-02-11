@@ -1,7 +1,7 @@
 #![allow(unused)]
 
-use std::{collections::HashMap, env, fs::{File, OpenOptions}, io::Read, path::Path};
-use models::{Action, Change, Entity};
+use std::{collections::HashMap, env, fs::{File, OpenOptions}, hash::Hash, io::Read, path::Path, str::FromStr, sync::{RwLockReadGuard, RwLockWriteGuard}};
+use models::{Action, Change, Entity, Loggable};
 use tokio::sync::RwLock;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -15,28 +15,35 @@ pub struct Config {
     pub app_name: String,
 }
 
-pub type Storage = HashMap<Uuid, Entity>;
+// We're back to a struct agaiin!
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Storage(pub HashMap<Uuid, Entity>);
 
-pub trait FsExt {
-    fn save(&self) -> Result<()>;
-    fn load() -> Result<Storage>;
-}
 
-impl FsExt for Storage {
-    fn load() -> Result<Storage> {
-        let mut file = File::create(Path::new("storage.json"))?;
+impl Storage {
+    
+    pub fn new() -> Self {
+        return match Self::load() {
+            Ok(s) => s,
+            _ => Self(HashMap::new())
+        }
+    }
+
+    pub fn load() -> Result<Storage> {
+        let mut file = OpenOptions::new().read(true).write(true).create(true).open("storage.json").expect("Failed to access storage.json in current directory!");
         let mut data = String::new();
         file.read_to_string(&mut data)?;
         let storage = serde_json::from_str(&data)?;
         Ok(storage)
     }
 
-    fn save(&self) -> Result<()> {
-        let file = File::create("storage.json")?;
-        serde_json::to_writer_pretty(file, self)?;
+    pub fn save(&self) -> Result<()> {
+        let mut file = OpenOptions::new().read(true).write(true).create(true).open("storage.json").expect("Failed to access storage.json in current directory!");
+        serde_json::to_writer_pretty(file, &self.0)?;
         Ok(())
     }
 }
+
 
 impl Default for Config {
     fn default() -> Self {
@@ -53,7 +60,7 @@ impl Config {
     }
 
     pub fn load() -> Result<Self> {
-        let mut file = File::create(Path::new("config.json"))?;
+        let mut file = OpenOptions::new().read(true).write(true).create(true).open("config.json").expect("Failed to access config.json in current directory!");
         let mut data = String::new();
         file.read_to_string(&mut data)?;
         let config = serde_json::from_str(&data)?;
@@ -61,7 +68,7 @@ impl Config {
     }
 
     pub fn save(&self) -> Result<()> {
-        let file = File::create("config.json")?;
+        let mut file = OpenOptions::new().read(true).write(true).create(true).open("config.json").expect("Failed to access config.json in current directory!");
         serde_json::to_writer_pretty(file, self)?;
         Ok(())
     }
@@ -84,5 +91,23 @@ impl App {
         }
     }
 
+    pub async fn log_change<T: Loggable> (&self, entity_id: &str, action_str: &str, datetime: &str) {
+        let action = Action::from_str(action_str).expect("Failed to parse action");
+        let e_uuid = Uuid::from_str(entity_id).expect("Failed to parse Entity UUID");
+
+        let mut storage = &mut self.storage.write().await.0;
+
+        if let Some(entity) = storage.get_mut(&e_uuid) {
+            let change = Change {
+                entity_id: entity_id.to_string(),
+                action,
+                date: datetime.to_string(),
+            };
+
+            entity.add_change(change);
+        } else {
+            eprintln!("Entity with UUID {} not found", entity_id);
+        }
+    }
    
 }
