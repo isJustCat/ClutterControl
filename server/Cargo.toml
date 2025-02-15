@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "base",
+    "api",
+    "logproclol"
+]
+resolver = "2"
+
+[workspace.dependencies]
+anyhow = "1.0.95"
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.138"
+rocket = { version = "0.5.1", features = ["json"] }
+tokio = { version = "1.43.0", features = ["sync"] }
+uuid = { version = "1.12.1", features = ["v4", "fast-rng", "macro-diagnostics", "serde"] }

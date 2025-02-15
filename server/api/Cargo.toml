@@ -1,0 +1,12 @@
+[package]
+name = "cluttercontrol-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+rocket = { workspace = true }
+cluttercontrol-base = { path = "../base" }
+uuid = {workspace = true}
